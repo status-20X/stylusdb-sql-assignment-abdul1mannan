@@ -15,6 +15,80 @@ function evaluateCondition(row, clause) {
         default: throw new Error(`Unsupported operator: ${operator}`);
     }
 }
+// Helper functions for different JOIN types
+
+function performInnerJoin(mainData, joinData, joinCondition, fields, table) {
+    return mainData.flatMap(mainRow => {
+        return joinData
+            .filter(joinRow => {
+                const mainValue = mainRow[joinCondition.left.split('.')[1]];
+                const joinValue = joinRow[joinCondition.right.split('.')[1]];
+                return mainValue === joinValue;
+            })
+            .map(joinRow => {
+                return fields.reduce((acc, field) => {
+                    const [tableName, fieldName] = field.split('.');
+                    acc[field] = tableName === table ? mainRow[fieldName] : joinRow[fieldName];
+                    return acc;
+                }, {});
+            });
+    });
+}
+function performLeftJoin(mainData, joinData, joinCondition, fields, table) {
+    return mainData.flatMap(mainRow => {
+        const matchingRows = joinData.filter(joinRow => {
+            const mainValue = mainRow[joinCondition.left.split('.')[1]];
+            const joinValue = joinRow[joinCondition.right.split('.')[1]];
+            return mainValue === joinValue;
+        });
+
+        if (matchingRows.length === 0) {
+            return [
+                fields.reduce((acc, field) => {
+                    const [tableName, fieldName] = field.split('.');
+                    acc[field] = tableName === table ? mainRow[fieldName] : null;
+                    return acc;
+                }, {})
+            ];
+        }
+
+        return matchingRows.map(joinRow => {
+            return fields.reduce((acc, field) => {
+                const [tableName, fieldName] = field.split('.');
+                acc[field] = tableName === table ? mainRow[fieldName] : joinRow[fieldName];
+                return acc;
+            }, {});
+        });
+    });
+}
+
+function performRightJoin(mainData, joinData, joinCondition, fields, table) {
+    return joinData.flatMap(joinRow => {
+        const matchingRows = mainData.filter(mainRow => {
+            const mainValue = mainRow[joinCondition.left.split('.')[1]];
+            const joinValue = joinRow[joinCondition.right.split('.')[1]];
+            return mainValue === joinValue;
+        });
+
+        if (matchingRows.length === 0) {
+            return [
+                fields.reduce((acc, field) => {
+                    const [tableName, fieldName] = field.split('.');
+                    acc[field] = tableName === table ? null : joinRow[fieldName];
+                    return acc;
+                }, {})
+            ];
+        }
+
+        return matchingRows.map(mainRow => {
+            return fields.reduce((acc, field) => {
+                const [tableName, fieldName] = field.split('.');
+                acc[field] = tableName === table ? mainRow[fieldName] : joinRow[fieldName];
+                return acc;
+            }, {});
+        });
+    });
+}
 
 async function executeSELECTQuery(query) {
   // src/index.js at executeSELECTQuery
@@ -46,9 +120,6 @@ if (joinTable && joinCondition) {
 const filteredData = whereClauses.length > 0
 ? data.filter(row => whereClauses.every(clause => evaluateCondition(row, clause)))
 : data;
-
-    // Select the specified fields
-    // src/index.js at executeSELECTQuery
 
 return filteredData.map(row => {
     const selectedRow = {};

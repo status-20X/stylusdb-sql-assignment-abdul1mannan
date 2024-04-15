@@ -16,7 +16,9 @@ test('Parse SQL Query', () => {
     expect(parsed).toEqual({
         fields: ['id', 'name'],
         table: 'student',
-        whereClauses: []
+        whereClauses: [],
+        joinCondition: null,
+        joinTable: null
     });
 });
 
@@ -37,10 +39,12 @@ test('Parse SQL Query with WHERE Clause', () => {
         fields: ['id', 'name'],
         table: 'student',
         whereClauses: [{
-          field: "age",
-          operator: "=",
-          value: "25",
+            "field": "age",
+            "operator": "=",
+            "value": "25",
         }],
+        joinCondition: null,
+        joinTable: null
     });
 });
 
@@ -67,7 +71,9 @@ test('Parse SQL Query with Multiple WHERE Clauses', () => {
             "field": "name",
             "operator": "=",
             "value": "John",
-        }]
+        }],
+        joinCondition: null,
+        joinTable: null
     });
 });
 
