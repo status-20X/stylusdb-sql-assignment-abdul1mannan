@@ -11,7 +11,7 @@ test('Read CSV File', async () => {
 });
 
 test('Parse SQL Query', () => {
-    const query = 'SELECT id, name FROM sample';
+    const query = 'SELECT id, name FROM sample ';
     const parsed = parseQuery(query);
     expect(parsed).toEqual({
         fields: ['id', 'name'],
@@ -21,7 +21,7 @@ test('Parse SQL Query', () => {
 });
 
 test('Execute SQL Query', async () => {
-    const query = 'SELECT id, name FROM sample';
+    const query = 'SELECT id, name FROM sample WHERE age = 30 AND name = John';
     const result = await executeSELECTQuery(query);
     expect(result.length).toBeGreaterThan(0);
     expect(result[0]).toHaveProperty('id');
